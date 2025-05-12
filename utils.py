@@ -69,13 +69,12 @@ def check_unique_usr(username_sign_up: str):
     return non_empty_str_check(username_sign_up)
 
 
-def register_new_usr(name_sign_up, email_sign_up, username_sign_up, password_sign_up, matricula, created_at):
+def register_new_usr(email_sign_up, username_sign_up, password_sign_up, matricula, created_at):
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password_sign_up.encode('utf-8'), salt)
 
     new_usr_data = {
         'username': username_sign_up,
-        'name': name_sign_up,
         'email': email_sign_up,
         'password': hashed_password.decode('utf-8'),
         'matricula': matricula,

@@ -95,6 +95,7 @@ class __login__:
                         email_sign_up,
                         username_sign_up,
                         password_sign_up,
+                        matricula_sign_up,
                         created_at
                     )
                     st.success("Registro realizado com sucesso!")
@@ -109,7 +110,7 @@ class __login__:
         df = pd.DataFrame(users)
         if not df.empty:
             st.title("Usuários Registrados")
-            st.table(df[['username', 'name', 'email', 'created_at']])
+            st.table(df[['username', 'name', 'email', 'matricula', 'created_at']])
         else:
             st.info("Nenhum usuário encontrado.")
 
