@@ -28,6 +28,7 @@ with st.form("form_registro_amostra"):
     id_hvu = st.text_input("Id do hvu")
     microchip = st.text_input("Microchip")
     especie_input = st.text_input("Espécie (Nome Científico)")
+    origem = st.text_input("Origem (Orgão responsável)")
     nome_comum_input = st.text_input("Nome Comum")
     local_coleta = st.text_input("Local de Coleta")
     data_coleta = st.date_input("Data da Coleta")
@@ -64,6 +65,7 @@ if submit:
             "_id": id_input,
             "id hvu": id_hvu,
             "microchip": microchip,
+            'origem': origem,
             "especie": especie_input,
             "nome comum": nome_comum_input,
             "local_coleta": local_coleta,
