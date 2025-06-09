@@ -3,6 +3,8 @@ from pymongo import MongoClient
 import pandas as pd
 import altair as alt
 import os
+from bson import ObjectId
+
 
 # Conexão ao MongoDB Atlas
 def connect_to_mongo():
@@ -11,29 +13,43 @@ def connect_to_mongo():
     db = client['pibit_app']  # Ou já especificado na URI, se preferir.
     return db
 
+# Função auxiliar para converter ObjectIds recursivamente
+def convert_objectid_to_str(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, dict):
+        return {k: convert_objectid_to_str(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_objectid_to_str(elem) for elem in obj]
+    else:
+        return obj
+
 # Função para buscar amostras do banco de dados
 def fetch_samples():
     db = connect_to_mongo()
     collection = db['amostras']
     samples = list(collection.find())
-    for sample in samples:
-        sample['_id'] = str(sample['_id'])  # Converte ObjectId para string
-    return samples
+    
+    # Aplica a conversão recursiva para cada amostra
+    processed_samples = [convert_objectid_to_str(sample) for sample in samples]
+    return processed_samples
 
 # Função para buscar reagentes do banco de dados
 def fetch_reagents():
     db = connect_to_mongo()
     collection = db['reagentes']
     reagents = list(collection.find())
-    for reagent in reagents:
-        reagent['_id'] = str(reagent['_id'])
-    return reagents
+    
+    # Aplica a conversão recursiva para cada reagente
+    processed_reagents = [convert_objectid_to_str(reagent) for reagent in reagents]
+    return processed_reagents
 
 # Função para filtrar pelo nome do animal
 def filter_by_animal_name(df, column_name='Nome comum'):
     pesquisa = st.sidebar.text_input("Pesquisar pelo nome do animal:")
     if pesquisa:
-        df = df[df[column_name].str.contains(pesquisa, case=False, na=False)]
+        # Garante que a coluna é string para usar contains
+        df = df[df[column_name].astype(str).str.contains(pesquisa, case=False, na=False)]
     return df
 
 # Injetar CSS customizado para ajustar o container do multiselect (se necessário)
@@ -72,15 +88,21 @@ with tabs[0]:
     # Filtro por Data de coleta (se existir a coluna)
     if 'Data de coleta' in df_samples.columns:
         df_samples['Data de coleta'] = pd.to_datetime(df_samples['Data de coleta'], errors='coerce')
-        data_min = df_samples['Data de coleta'].min()
-        data_max = df_samples['Data de coleta'].max()
-        data_selecionada = st.sidebar.date_input("Selecione o intervalo de datas:",
-                                                  value=(data_min, data_max))
-        if isinstance(data_selecionada, tuple) and len(data_selecionada) == 2:
-            inicio, fim = data_selecionada
-            df_samples = df_samples[(df_samples['Data de coleta'] >= pd.to_datetime(inicio)) & 
-                                    (df_samples['Data de coleta'] <= pd.to_datetime(fim))]
-    
+        # Remove linhas com 'NaT' (Not a Time) após a conversão, se necessário
+        df_samples.dropna(subset=['Data de coleta'], inplace=True) 
+
+        if not df_samples['Data de coleta'].empty: # Verifica se ainda há datas válidas
+            data_min = df_samples['Data de coleta'].min()
+            data_max = df_samples['Data de coleta'].max()
+            data_selecionada = st.sidebar.date_input("Selecione o intervalo de datas:",
+                                                     value=(data_min, data_max))
+            if isinstance(data_selecionada, tuple) and len(data_selecionada) == 2:
+                inicio, fim = data_selecionada
+                df_samples = df_samples[(df_samples['Data de coleta'] >= pd.to_datetime(inicio)) & 
+                                        (df_samples['Data de coleta'] <= pd.to_datetime(fim))]
+        else:
+            st.sidebar.warning("Nenhuma data de coleta válida encontrada para filtrar.")
+
     # Filtro pelo Nome do animal (se existir)
     if 'Nome comum' in df_samples.columns:
         df_samples = filter_by_animal_name(df_samples, 'Nome comum')
