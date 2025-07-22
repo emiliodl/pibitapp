@@ -1,162 +1,70 @@
 import streamlit as st
-from pymongo import MongoClient
-import pandas as pd
-import altair as alt
-import os
-from bson import ObjectId
 
+# --- Funções para gerenciar dados (simulando um CRUD) ---
+def carregar_animais():
+    # Simula carregar de um DB ou arquivo
+    if 'animais' not in st.session_state:
+        st.session_state.animais = []
+    return st.session_state.animais
 
-# Conexão ao MongoDB Atlas
-def connect_to_mongo():
-    uri = ("mongodb+srv://emiliods79:uD5A2J4o38dpk0hX@cluster0.ufpae.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-    client = MongoClient(uri)
-    db = client['pibit_app']  # Ou já especificado na URI, se preferir.
-    return db
+def adicionar_animal(nome, especie):
+    st.session_state.animais.append({'id': len(st.session_state.animais) + 1, 'nome': nome, 'especie': especie, 'amostras': []})
 
-# Função auxiliar para converter ObjectIds recursivamente
-def convert_objectid_to_str(obj):
-    if isinstance(obj, ObjectId):
-        return str(obj)
-    elif isinstance(obj, dict):
-        return {k: convert_objectid_to_str(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_objectid_to_str(elem) for elem in obj]
+def adicionar_amostra(animal_id, tipo_amostra, data_coleta):
+    for animal in st.session_state.animais:
+        if animal['id'] == animal_id:
+            animal['amostras'].append({'tipo': tipo_amostra, 'data': data_coleta})
+            break
+
+# --- Interface do Streamlit ---
+st.title("Sistema de Gestão de Animais e Amostras")
+
+tab1, tab2 = st.tabs(["Animais Cadastrados", "Adicionar Novo Animal"])
+
+with tab1:
+    st.header("Lista de Animais Cadastrados")
+    animais = carregar_animais()
+
+    if not animais:
+        st.info("Nenhum animal cadastrado ainda.")
     else:
-        return obj
+        for animal in animais:
+            # Usando expander para cada animal
+            with st.expander(f"**{animal['nome']}** ({animal['especie']})"):
+                st.write(f"ID do Animal: {animal['id']}")
+                st.write("---")
+                st.subheader("Amostras Coletadas:")
+                if animal['amostras']:
+                    for amostra in animal['amostras']:
+                        st.write(f"- Tipo: {amostra['tipo']}, Data: {amostra['data']}")
+                else:
+                    st.info("Nenhuma amostra para este animal ainda.")
 
-# Função para buscar amostras do banco de dados
-def fetch_samples():
-    db = connect_to_mongo()
-    collection = db['amostras']
-    samples = list(collection.find())
-    
-    # Aplica a conversão recursiva para cada amostra
-    processed_samples = [convert_objectid_to_str(sample) for sample in samples]
-    return processed_samples
+                st.subheader("Adicionar Nova Amostra:")
+                with st.form(key=f"form_amostra_{animal['id']}"):
+                    tipo_amostra = st.text_input("Tipo da Amostra", key=f"tipo_{animal['id']}")
+                    data_coleta = st.date_input("Data da Coleta", key=f"data_{animal['id']}")
+                    submit_button = st.form_submit_button("Adicionar Amostra")
 
-# Função para buscar reagentes do banco de dados
-def fetch_reagents():
-    db = connect_to_mongo()
-    collection = db['reagentes']
-    reagents = list(collection.find())
-    
-    # Aplica a conversão recursiva para cada reagente
-    processed_reagents = [convert_objectid_to_str(reagent) for reagent in reagents]
-    return processed_reagents
+                    if submit_button:
+                        if tipo_amostra:
+                            adicionar_amostra(animal['id'], tipo_amostra, str(data_coleta))
+                            st.success("Amostra adicionada com sucesso!")
+                            st.rerun() # Recarregar para mostrar a nova amostra
+                        else:
+                            st.warning("Por favor, preencha o tipo da amostra.")
 
-# Função para filtrar pelo nome do animal
-def filter_by_animal_name(df, column_name='Nome comum'):
-    pesquisa = st.sidebar.text_input("Pesquisar pelo nome do animal:")
-    if pesquisa:
-        # Garante que a coluna é string para usar contains
-        df = df[df[column_name].astype(str).str.contains(pesquisa, case=False, na=False)]
-    return df
+with tab2:
+    st.header("Adicionar Novo Animal")
+    with st.form("form_novo_animal"):
+        nome_animal = st.text_input("Nome do Animal")
+        especie_animal = st.text_input("Espécie")
+        submit_novo_animal = st.form_submit_button("Cadastrar Animal")
 
-# Injetar CSS customizado para ajustar o container do multiselect (se necessário)
-st.markdown(
-    """
-    <style>
-    /* Ajusta o container do multiselect para ter altura máxima e scroll vertical */
-    div[data-baseweb="select"] > div {
-        max-height: 150px;
-        overflow-y: auto;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Página principal
-st.title("Amostras e Reagentes")
-
-# Cria abas para 'Registros', 'Relatório' e 'Reagentes'
-tabs = st.tabs(["Registros", "Relatório", "Reagentes"])
-
-# Aba Amostras - Registros e Relatório
-with tabs[0]:
-    st.header("Lista de Registros - Amostras")
-    samples = fetch_samples()
-    if samples:
-        df_samples = pd.DataFrame(samples)
-    else:
-        st.info("Nenhuma amostra registrada ainda.")
-        st.stop()
-    
-    # --- Filtros na sidebar ---
-    st.sidebar.header("Filtros para Amostras")
-    
-    # Filtro por Data de coleta (se existir a coluna)
-    if 'Data de coleta' in df_samples.columns:
-        df_samples['Data de coleta'] = pd.to_datetime(df_samples['Data de coleta'], errors='coerce')
-        # Remove linhas com 'NaT' (Not a Time) após a conversão, se necessário
-        df_samples.dropna(subset=['Data de coleta'], inplace=True) 
-
-        if not df_samples['Data de coleta'].empty: # Verifica se ainda há datas válidas
-            data_min = df_samples['Data de coleta'].min()
-            data_max = df_samples['Data de coleta'].max()
-            data_selecionada = st.sidebar.date_input("Selecione o intervalo de datas:",
-                                                     value=(data_min, data_max))
-            if isinstance(data_selecionada, tuple) and len(data_selecionada) == 2:
-                inicio, fim = data_selecionada
-                df_samples = df_samples[(df_samples['Data de coleta'] >= pd.to_datetime(inicio)) & 
-                                        (df_samples['Data de coleta'] <= pd.to_datetime(fim))]
-        else:
-            st.sidebar.warning("Nenhuma data de coleta válida encontrada para filtrar.")
-
-    # Filtro pelo Nome do animal (se existir)
-    if 'Nome comum' in df_samples.columns:
-        df_samples = filter_by_animal_name(df_samples, 'Nome comum')
-    
-    # Exibe a tabela filtrada
-    st.dataframe(df_samples, use_container_width=True)
-    
-    # Opção para exportar como CSV
-    csv_samples = df_samples.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="Baixar Amostras como CSV",
-        data=csv_samples,
-        file_name="amostras_registradas.csv",
-        mime="text/csv"
-    )
-
-with tabs[1]:
-    st.header("Relatório de Amostras")
-    
-    # Exemplo de gráfico: distribuição das espécies ou Nome do animal
-    if 'Nome comum' in df_samples.columns:
-        # Cria uma contagem por nome do animal
-        especies = df_samples['Nome comum'].value_counts().reset_index()
-        especies.columns = ['Nome comum', 'Quantidade']
-        
-        # Gráfico de barras usando Altair
-        grafico = alt.Chart(especies).mark_bar().encode(
-            x=alt.X("Nome comum:N", sort='-y', title="Nome comum"),
-            y=alt.Y("Quantidade:Q", title="Quantidade"),
-            tooltip=["Nome comum", "Quantidade"]
-        ).properties(
-            width=600,
-            height=400,
-            title="Distribuição de Espécies"
-        )
-        st.altair_chart(grafico, use_container_width=True)
-    else:
-        st.info("Coluna 'Nome do animal' não encontrada para gerar o relatório.")
-
-# Aba Reagentes
-with tabs[2]:
-    st.header("Reagentes")
-    reagents = fetch_reagents()
-    if reagents:
-        df_reagents = pd.DataFrame(reagents)
-        st.dataframe(df_reagents, use_container_width=True)
-        
-        # Opção para exportar como CSV
-        csv_reagents = df_reagents.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="Baixar Reagentes como CSV",
-            data=csv_reagents,
-            file_name="reagentes_registrados.csv",
-            mime="text/csv"
-        )
-    else:
-        st.info("Nenhum reagente registrado ainda.")
+        if submit_novo_animal:
+            if nome_animal and especie_animal:
+                adicionar_animal(nome_animal, especie_animal)
+                st.success(f"Animal '{nome_animal}' cadastrado com sucesso!")
+                st.rerun() # Recarregar para aparecer na lista de animais
+            else:
+                st.warning("Por favor, preencha todos os campos.")
