@@ -114,8 +114,6 @@ with tab_amostra:
         linked_animal_id = None
         if selected_animal_str and " (ID: " in selected_animal_str:
             linked_animal_id = selected_animal_str.split(" (ID: ")[1][:-1] # Extrai o ID entre " (ID: " e ")"
-
-        amostra_nome_comum = st.text_input("Nome Comum do Animal")
         amostra_local_coleta = st.text_input("Local de Coleta da Amostra")
         amostra_data_coleta = st.date_input("Data da Coleta da Amostra", value=date.today())
         amostra_nome_coletor = st.text_input("Nome do Coletor")
