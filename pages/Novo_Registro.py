@@ -14,9 +14,7 @@ def connect_to_mongo():
     db = client['pibit_app']
     return db
 
-# --- Funções CRUD para cada Coleção ---
 
-# Função genérica para adicionar um documento a uma coleção
 def add_document(collection_name, doc_data):
     db = connect_to_mongo()
     collection = db[collection_name]

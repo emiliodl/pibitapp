@@ -6,3 +6,4 @@ datetime
 openpyxl
 pymongo
 streamlit_option_menu
+plotly
