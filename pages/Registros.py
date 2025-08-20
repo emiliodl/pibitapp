@@ -86,12 +86,9 @@ with tab1:
         ]
 
     # Paginação
-    por_pagina = 5
+    por_pagina = 7
     total = len(animais)
-    pagina = st.number_input(
-        "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1), value=1, step=1, key="pagina_animal"
-    )
-    inicio = (pagina - 1) * por_pagina
+    inicio = (st.session_state.get("pagina_animal", 1) - 1) * por_pagina
     fim = inicio + por_pagina
     animais_pagina = animais[inicio:fim]
 
@@ -132,6 +129,12 @@ with tab1:
                 else:
                     st.info("Nenhuma amostra para este animal ainda.")
 
+        # Paginação embaixo
+        pagina = st.number_input(
+            "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1),
+            value=st.session_state.get("pagina_animal", 1), step=1, key="pagina_animal"
+        )
+
 # ---------------- TAB 2: Amostras ----------------
 with tab2:
     st.header("Amostras Cadastradas")
@@ -149,12 +152,9 @@ with tab2:
         ]
 
     # Paginação
-    por_pagina = 5
+    por_pagina = 7
     total = len(amostras)
-    pagina = st.number_input(
-        "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1), value=1, step=1, key="pagina_amostra"
-    )
-    inicio = (pagina - 1) * por_pagina
+    inicio = (st.session_state.get("pagina_amostra", 1) - 1) * por_pagina
     fim = inicio + por_pagina
     amostras_pagina = amostras[inicio:fim]
 
@@ -176,6 +176,12 @@ with tab2:
                 }
                 exibir_campos(campos)
 
+        # Paginação embaixo
+        pagina = st.number_input(
+            "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1),
+            value=st.session_state.get("pagina_amostra", 1), step=1, key="pagina_amostra"
+        )
+
 # ---------------- TAB 3: Exames ----------------
 with tab3:
     st.header("Exames Cadastrados")
@@ -194,12 +200,9 @@ with tab3:
         ]
 
     # Paginação
-    por_pagina = 5
+    por_pagina = 7
     total = len(exames)
-    pagina = st.number_input(
-        "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1), value=1, step=1, key="pagina_exame"
-    )
-    inicio = (pagina - 1) * por_pagina
+    inicio = (st.session_state.get("pagina_exame", 1) - 1) * por_pagina
     fim = inicio + por_pagina
     exames_pagina = exames[inicio:fim]
 
@@ -221,6 +224,12 @@ with tab3:
                 }
                 exibir_campos(campos)
 
+        # Paginação embaixo
+        pagina = st.number_input(
+            "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1),
+            value=st.session_state.get("pagina_exame", 1), step=1, key="pagina_exame"
+        )
+
 # ---------------- TAB 4: Reagentes ----------------
 with tab4:
     st.header("Reagentes Cadastrados")
@@ -238,12 +247,9 @@ with tab4:
         ]
 
     # Paginação
-    por_pagina = 5
+    por_pagina = 7
     total = len(reagentes)
-    pagina = st.number_input(
-        "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1), value=1, step=1, key="pagina_reagente"
-    )
-    inicio = (pagina - 1) * por_pagina
+    inicio = (st.session_state.get("pagina_reagente", 1) - 1) * por_pagina
     fim = inicio + por_pagina
     reagentes_pagina = reagentes[inicio:fim]
 
@@ -253,14 +259,38 @@ with tab4:
         st.caption(
             f"Mostrando {inicio+1} a {min(fim, total)} de {total} reagentes")
         for reagente in reagentes_pagina:
-            with st.expander(f"Reagente {reagente.get('_id', 'Sem ID')}"):
+            with st.expander(f"Reagente {reagente.get('nome', 'Sem ID')}"):
                 campos = {
                     "ID": reagente.get('_id', 'Sem ID'),
                     "Nome": reagente.get('nome', 'Não informado'),
-                    "Tipo": reagente.get('tipo', 'Não informado'),
+                    "Código": reagente.get('codigo', 'Não informado'),
+                    "Número do Lote": reagente.get('numero_lote', 'Não informado'),
+                    "Marca": reagente.get('marca', 'Não informado'),
+                    "Validade": reagente.get('data_validade', 'Não informado'),
                     "Quantidade": reagente.get('quantidade', 'Não informado'),
-                    "Validade": reagente.get('validade', 'Não informado'),
-                    "Fornecedor": reagente.get('fornecedor', 'Não informado'),
+                    "Unidade": reagente.get('unidade', 'Não informado'),
+                    "Local de Armazenamento": reagente.get('local_armazenamento', 'Não informado'),
                     "Observações": reagente.get('observacoes', 'Nenhuma')
                 }
                 exibir_campos(campos)
+                nova_quantidade = st.number_input(
+                    "Atualizar quantidade disponível", min_value=0, value=int(reagente.get('quantidade', 0)), step=1, key=f"qtd_{reagente.get('_id')}")
+                if st.button("Salvar nova quantidade", key=f"btn_{reagente.get('_id')}"):
+                    reagentes_col.update_one({"_id": reagente['_id']}, {
+                                             "$set": {"quantidade": nova_quantidade}})
+                    st.success("Quantidade atualizada!")
+
+                # Confirmação para deleção (sem expander aninhado)
+                st.markdown("---")
+                st.warning(
+                    "Esta ação é irreversível. Tem certeza que deseja excluir este reagente?")
+                if st.button("Confirmar exclusão", key=f"del_{reagente.get('_id')}"):
+                    reagentes_col.delete_one({"_id": reagente['_id']})
+                    st.success(
+                        "Reagente excluído com sucesso! Atualize a página para ver a lista atualizada.")
+
+        # Paginação embaixo
+        pagina = st.number_input(
+            "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1),
+            value=st.session_state.get("pagina_reagente", 1), step=1, key="pagina_reagente"
+        )
