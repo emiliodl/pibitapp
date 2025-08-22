@@ -120,7 +120,7 @@ with tab1:
                     'animal_id') == animal.get('_id')]
                 if amostras_do_animal:
                     for amostra in amostras_do_animal:
-                        texto = f"- Tipo: {amostra.get('tipo', 'Sem tipo')}, Data: {amostra.get('data', 'Sem data')}"
+                        texto = f"- Tipo: {amostra.get('metodo_coleta', 'Sem tipo')}, Data: {amostra.get('data_coleta_amostra', 'Sem data')}"
                         if amostra.get('local_coleta'):
                             texto += f", Local: {amostra.get('local_coleta')}"
                         if amostra.get('data_coleta'):
@@ -168,10 +168,9 @@ with tab2:
                 campos = {
                     "ID": amostra.get('_id', 'Sem ID'),
                     "Animal ID": amostra.get('animal_id', 'Não informado'),
-                    "Tipo": amostra.get('tipo', 'Não informado'),
-                    "Data": amostra.get('data', 'Não informado'),
+                    "Tipo": amostra.get('metodo_coleta', 'Não informado'),
                     "Local de Coleta": amostra.get('local_coleta', 'Não informado'),
-                    "Data de Coleta": amostra.get('data_coleta', 'Não informado'),
+                    "Data de Coleta": amostra.get('data_coleta_amostra', 'Não informado'),
                     "Observações": amostra.get('observacoes', 'Nenhuma')
                 }
                 exibir_campos(campos)
@@ -215,12 +214,14 @@ with tab3:
             with st.expander(f"Exame {exame.get('_id', 'Sem ID')}"):
                 campos = {
                     "ID": exame.get('_id', 'Sem ID'),
-                    "Animal ID": exame.get('animal_id', 'Não informado'),
                     "Amostra ID": exame.get('amostra_id', 'Não informado'),
+                    "Animal ID": exame.get('animal_id', 'Não informado'),
                     "Tipo de Exame": exame.get('tipo_exame', 'Não informado'),
-                    "Resultado": exame.get('resultado', 'Não informado'),
-                    "Data": exame.get('data', 'Não informado'),
-                    "Observações": exame.get('observacoes', 'Nenhuma')
+                    "Laboratório Realizador": exame.get('laboratorio_realizador', 'Não informado'),
+                    "Data de Realização": exame.get('data_realizacao', 'Não informado'),
+                    "Resultado": exame.get('resultado_detalhado', 'Não informado'),
+                    "Responsável": exame.get('responsavel_exame', 'Não informado'),
+                    "Observações": exame.get('observacoes_exame', 'Nenhuma')
                 }
                 exibir_campos(campos)
 

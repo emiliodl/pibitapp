@@ -19,7 +19,7 @@ def connect_to_mongo():
 
 db = connect_to_mongo()
 
-st.title("Importação de Dados para MongoDB")
+st.title("Importação de dados para o Sistema")
 
 # Seleção do tipo de planilha para definir a coleção
 tipo_planilha = st.radio(

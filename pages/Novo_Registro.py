@@ -70,6 +70,7 @@ with tab_animal:
         animal_status = st.text_input("Status")
         animal_funcao = st.text_input("Função (opcional)")
         animal_local_origem = st.text_input("Local de Origem")
+        animal_idade = st.text_input("Idade (opcional)")
         animal_data_nascimento = st.date_input(
             "Data de Nascimento (opcional)", value=None)
         animal_observacoes = st.text_area("Observações (opcional)")
@@ -89,6 +90,10 @@ with tab_animal:
                     "status": animal_status,
                     "funcao": animal_funcao,
                     "local_origem": animal_local_origem,
+                    "hvu": animal_hvu,
+                    "microchip": animal_microchip,
+                    "orgao": animal_orgao,
+                    "idade": animal_idade,
                     "data_nascimento": str(animal_data_nascimento) if animal_data_nascimento else None,
                     "observacoes": animal_observacoes
                 }
@@ -143,6 +148,7 @@ with tab_amostra:
         amostra_destino = st.text_input(
             "Destino da Amostra (e.g., Laboratório X, Biobanco)")
         amostra_latitude = st.text_input("Latitude (opcional)")
+        amostra_kit = st.text_input("Kit utilizado (opcional)")
         amostra_longitude = st.text_input("Longitude (opcional)")
         amostra_resultado_exame = st.text_input(
             "Resultado do Exame (inicial, opcional)")
@@ -166,6 +172,10 @@ with tab_amostra:
                     "metodo_coleta": amostra_metodo_coleta,
                     "condicao_amostra": amostra_condicao,
                     "destino_amostra": amostra_destino,
+                    "longitude": amostra_longitude,
+                    "resultado_exame": amostra_resultado_exame,
+                    "latitude": amostra_latitude,
+                    "kit_utilizado": amostra_kit,
                     "observacoes": amostra_observacoes
                 }
                 amostra_data = {
@@ -190,10 +200,10 @@ with tab_exame:
         amostras_collection = db['amostras']
         # Buscar apenas o _id e tipo de amostra
         amostras_existentes = list(amostras_collection.find(
-            {}, {"_id": 1, "Tipo de amostra": 1}))
+            {}, {"_id": 1, "metodo_coleta": 1}))
 
         amostra_options = [
-            ""] + [f"{amostra.get('Tipo de amostra', 'Amostra sem tipo')} (ID: {amostra['_id']})" for amostra in amostras_existentes]
+            ""] + [f"{amostra.get('metodo_coleta', 'Amostra sem tipo')} (ID: {amostra['_id']})" for amostra in amostras_existentes]
         selected_amostra_str = st.selectbox(
             "Vincular a qual Amostra?", options=amostra_options)
 
@@ -206,8 +216,9 @@ with tab_exame:
         exame_laboratorio = st.text_input("Laboratório Realizador")
         exame_data_realizacao = st.date_input(
             "Data de Realização", value=date.today())
-        exame_resultado = st.text_area("Resultado Detalhado do Exame")
+        exame_resultado = st.text_area("Resultado do Exame")
         exame_responsavel = st.text_input("Responsável pelo Exame")
+        exame_procotocolo = st.text_input("Protocolo Utilizado")
         exame_observacoes = st.text_area("Observações do Exame (opcional)")
 
         submit_exame = st.form_submit_button("Registrar Exame")
@@ -227,7 +238,8 @@ with tab_exame:
                     "data_realizacao": str(exame_data_realizacao),
                     "resultado_detalhado": exame_resultado,
                     "responsavel_exame": exame_responsavel,
-                    "observacoes_exame": exame_observacoes
+                    "observacoes_exame": exame_observacoes,
+                    "protocolo_exame": exame_procotocolo
                 }
                 exame_data = {k: v for k, v in exame_data.items()
                               if v not in (None, "", [])}
