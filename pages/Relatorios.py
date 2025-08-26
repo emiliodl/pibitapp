@@ -23,10 +23,24 @@ amostras_col = db['amostras']
 exames_col = db['exames']
 reagentes_col = db['reagentes']
 
+def normalizar_sexo(sexo):
+    if not sexo:
+        return "Não informado"
+    sexo = sexo.strip().lower()
+    if sexo in ["femea", "fêmea"]:
+        return "Fêmea"
+    if sexo == "macho":
+        return "Macho"
+    if sexo == "indeterminado":
+        return "Desconhecido"
+    return sexo.capitalize()
+
 st.title("Relatórios e Estatísticas do Sistema")
 
 # --- Coleta de Dados ---
 animais = list(animais_col.find())
+for animal in animais:
+    animal['sexo'] = normalizar_sexo(animal.get('sexo'))
 amostras = list(amostras_col.find())
 exames = list(exames_col.find())
 reagentes = list(reagentes_col.find())
