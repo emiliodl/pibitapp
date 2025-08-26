@@ -98,7 +98,7 @@ with tab1:
         st.caption(
             f"Mostrando {inicio+1} a {min(fim, total)} de {total} animais")
         for animal in animais_pagina:
-            with st.expander(f"{animal.get('nome_comum', 'Sem nome comum')} ({animal.get('nome_cientifico', 'Sem nome científico')})"):
+            with st.expander(f"{animal.get('nome_comum', 'Sem nome comum')} ({animal.get('_id', 'Sem ID')})"):
                 campos = {
                     "ID": animal.get('_id', 'Sem ID'),
                     "Sexo": animal.get('sexo', 'Não informado'),
@@ -120,11 +120,9 @@ with tab1:
                     'animal_id') == animal.get('_id')]
                 if amostras_do_animal:
                     for amostra in amostras_do_animal:
-                        texto = f"- Tipo: {amostra.get('metodo_coleta', 'Sem tipo')}, Data: {amostra.get('data_coleta_amostra', 'Sem data')}"
+                        texto = f"- Tipo: {amostra.get('metodo_coleta', 'Sem tipo')}, Data: {amostra.get('data_coleta', 'Sem data')}"
                         if amostra.get('local_coleta'):
                             texto += f", Local: {amostra.get('local_coleta')}"
-                        if amostra.get('data_coleta'):
-                            texto += f", Data de Coleta: {amostra.get('data_coleta')}"
                         st.write(texto)
                 else:
                     st.info("Nenhuma amostra para este animal ainda.")
