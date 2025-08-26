@@ -65,6 +65,19 @@ def carregar_reagentes_mongo():
         return []
 
 
+def normalizar_sexo(sexo):
+    if not sexo:
+        return "Não informado"
+    sexo = sexo.strip().lower()
+    if sexo in ["femea", "fêmea"]:
+        return "Fêmea"
+    if sexo == "macho":
+        return "Macho"
+    if sexo == "indeterminado":
+        return "Desconhecido"
+    return sexo.capitalize()
+
+
 st.title("Registros do Sistema")
 
 tab1, tab2, tab3, tab4 = st.tabs(
@@ -76,6 +89,10 @@ with tab1:
     busca = st.text_input("Buscar animal por nome comum ou científico:")
     animais = carregar_animais_mongo()
     amostras = carregar_amostras_mongo()
+
+    # Normalizar sexo dos animais
+    for animal in animais:
+        animal['sexo'] = normalizar_sexo(animal.get('sexo'))
 
     # Filtro de busca
     if busca:
