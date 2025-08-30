@@ -65,19 +65,6 @@ def carregar_reagentes_mongo():
         return []
 
 
-def normalizar_sexo(sexo):
-    if not sexo:
-        return "Não informado"
-    sexo = sexo.strip().lower()
-    if sexo in ["femea", "fêmea"]:
-        return "Fêmea"
-    if sexo == "macho":
-        return "Macho"
-    if sexo == "indeterminado":
-        return "Desconhecido"
-    return sexo.capitalize()
-
-
 st.title("Registros do Sistema")
 
 tab1, tab2, tab3, tab4 = st.tabs(
@@ -89,10 +76,6 @@ with tab1:
     busca = st.text_input("Buscar animal por nome comum ou científico:")
     animais = carregar_animais_mongo()
     amostras = carregar_amostras_mongo()
-
-    # Normalizar sexo dos animais
-    for animal in animais:
-        animal['sexo'] = normalizar_sexo(animal.get('sexo'))
 
     # Filtro de busca
     if busca:
@@ -115,7 +98,7 @@ with tab1:
         st.caption(
             f"Mostrando {inicio+1} a {min(fim, total)} de {total} animais")
         for animal in animais_pagina:
-            with st.expander(f"{animal.get('nome_comum', 'Sem nome comum')} ({animal.get('_id', 'Sem ID')})"):
+            with st.expander(f"{animal.get('nome_comum', 'Sem nome comum')} ({animal.get('_id', 'Sem ID')})", expanded=False):
                 campos = {
                     "ID": animal.get('_id', 'Sem ID'),
                     "Sexo": animal.get('sexo', 'Não informado'),
@@ -143,6 +126,15 @@ with tab1:
                         st.write(texto)
                 else:
                     st.info("Nenhuma amostra para este animal ainda.")
+
+                # Exclusão do animal
+                st.markdown("---")
+                st.warning(
+                    "Esta ação é irreversível. Tem certeza que deseja excluir este animal?")
+                if st.button("Confirmar exclusão", key=f"del_animal_{animal.get('_id')}"):
+                    animais_col.delete_one({"_id": animal['_id']})
+                    st.success(
+                        "Animal excluído com sucesso! Atualize a página para ver a lista atualizada.")
 
         # Paginação embaixo
         pagina = st.number_input(
@@ -189,6 +181,15 @@ with tab2:
                     "Observações": amostra.get('observacoes', 'Nenhuma')
                 }
                 exibir_campos(campos)
+
+                # Exclusão da amostra
+                st.markdown("---")
+                st.warning(
+                    "Esta ação é irreversível. Tem certeza que deseja excluir esta amostra?")
+                if st.button("Confirmar exclusão", key=f"del_amostra_{amostra.get('_id')}"):
+                    amostras_col.delete_one({"_id": amostra['_id']})
+                    st.success(
+                        "Amostra excluída com sucesso! Atualize a página para ver a lista atualizada.")
 
         # Paginação embaixo
         pagina = st.number_input(
@@ -239,6 +240,15 @@ with tab3:
                     "Observações": exame.get('observacoes_exame', 'Nenhuma')
                 }
                 exibir_campos(campos)
+
+                # Exclusão do exame
+                st.markdown("---")
+                st.warning(
+                    "Esta ação é irreversível. Tem certeza que deseja excluir este exame?")
+                if st.button("Confirmar exclusão", key=f"del_exame_{exame.get('_id')}"):
+                    exames_col.delete_one({"_id": exame['_id']})
+                    st.success(
+                        "Exame excluído com sucesso! Atualize a página para ver a lista atualizada.")
 
         # Paginação embaixo
         pagina = st.number_input(
