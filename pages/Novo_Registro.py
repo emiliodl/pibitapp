@@ -71,10 +71,13 @@ with tab_animal:
         animal_funcao = st.text_input("Função (opcional)")
         animal_local_origem = st.text_input("Local de Origem")
         animal_idade = st.text_input("Idade (opcional)")
-        animal_data_nascimento = st.date_input(
-            "Data de Nascimento (opcional)", value=None)
+        animal_faixa_etaria = st.selectbox(
+            'Faixa Etária (opcional)', ["Filhote", "Suvenil",' Sub Adulto', "Adulto", "Senil"]
+        )
         animal_observacoes = st.text_area("Observações (opcional)")
-
+        animal_classe = st.selectbox(
+            'Classe', ["Ave", "Mamífero", "Répteis",' Anfíbios', "Peixes"]
+        )
         submit_animal = st.form_submit_button("Registrar Animal")
 
         if submit_animal:
@@ -94,7 +97,7 @@ with tab_animal:
                     "microchip": animal_microchip,
                     "orgao": animal_orgao,
                     "idade": animal_idade,
-                    "data_nascimento": str(animal_data_nascimento) if animal_data_nascimento else None,
+                    'faixa_etaria': animal_faixa_etaria,
                     "observacoes": animal_observacoes
                 }
                 # Remove campos vazios ou nulos antes de inserir
@@ -153,6 +156,10 @@ with tab_amostra:
         amostra_resultado_exame = st.text_input(
             "Resultado do Exame (inicial, opcional)")
         amostra_observacoes = st.text_area("Observações (opcional)")
+        amostra_caixa = st.text_input("Caixa de amarzenamento/Freezer (opcional)")
+        amostra_disponibilidade = st.checkbox("Sangue disponível para uso?")
+        amostra_dna = st.checkbox("DNA disponível para uso?")
+        amostra_rna = st.checkbox("RNA disponível para uso?")
 
         submit_amostra = st.form_submit_button("Registrar Amostra")
 
@@ -176,7 +183,11 @@ with tab_amostra:
                     "resultado_exame": amostra_resultado_exame,
                     "latitude": amostra_latitude,
                     "kit_utilizado": amostra_kit,
-                    "observacoes": amostra_observacoes
+                    "observacoes": amostra_observacoes,
+                    "caixa": amostra_caixa,
+                    "sangue_disponivel": amostra_disponibilidade,
+                    "dna_disponivel": amostra_dna,
+                    "rna_disponivel": amostra_rna
                 }
                 amostra_data = {
                     k: v for k, v in amostra_data.items() if v not in (None, "", [])}

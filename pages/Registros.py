@@ -73,7 +73,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # ---------------- TAB 1: Animais ----------------
 with tab1:
     st.header("Animais Registrados")
-    busca = st.text_input("Buscar animal por nome comum ou científico:")
+    busca = st.text_input("Buscar animal por nome comum, científico ou microchip:")
     animais = carregar_animais_mongo()
     amostras = carregar_amostras_mongo()
 
@@ -83,6 +83,7 @@ with tab1:
             animal for animal in animais
             if busca.lower() in str(animal.get('nome_comum', '')).lower()
             or busca.lower() in str(animal.get('nome_cientifico', '')).lower()
+            or busca.lower() in str(animal.get('microchip', '')).lower()
         ]
 
     # Paginação
@@ -110,7 +111,9 @@ with tab1:
                     "Função": animal.get('funcao', 'Não informado'),
                     "Local de Origem": animal.get('local_origem', 'Não informado'),
                     "Data de Nascimento": animal.get('data_nascimento', 'Não informado'),
-                    "Observações": animal.get('observacoes', 'Nenhuma')
+                    "Observações": animal.get('observacoes', 'Nenhuma'),
+                    'Faixa etária': animal.get('faixa_etaria', 'Não informado'),
+                    'Classe': animal.get('classe', 'Não informado')
                 }
                 exibir_campos(campos)
 
@@ -178,7 +181,11 @@ with tab2:
                     "Tipo": amostra.get('metodo_coleta', 'Não informado'),
                     "Local de Coleta": amostra.get('local_coleta', 'Não informado'),
                     "Data de Coleta": amostra.get('data_coleta_amostra', 'Não informado'),
-                    "Observações": amostra.get('observacoes', 'Nenhuma')
+                    "Observações": amostra.get('observacoes', 'Nenhuma'),
+                    "Caixa/Freezer": amostra.get('caixa', 'Não informado'),
+                    'Sangue Disponível': 'Sim' if amostra.get('sangue_disponivel') else 'Não',
+                    'DNA Disponível': 'Sim' if amostra.get('dna_disponivel') else 'Não',
+                    'RNA Disponível': 'Sim' if amostra.get('rna_disponivel') else 'Não',
                 }
                 exibir_campos(campos)
 
