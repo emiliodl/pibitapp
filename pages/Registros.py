@@ -174,31 +174,93 @@ with tab2:
         st.caption(
             f"Mostrando {inicio+1} a {min(fim, total)} de {total} amostras")
         for amostra in amostras_pagina:
-            with st.expander(f"Amostra {amostra.get('_id', 'Sem ID')}"):
-                campos = {
-                    "ID": amostra.get('_id', 'Sem ID'),
-                    "Animal ID": amostra.get('animal_id', 'Não informado'),
-                    "Tipo": amostra.get('metodo_coleta', 'Não informado'),
-                    "Local de Coleta": amostra.get('local_coleta', 'Não informado'),
-                    "Data de Coleta": amostra.get('data_coleta_amostra', 'Não informado'),
-                    "Observações": amostra.get('observacoes', 'Nenhuma'),
-                    "Caixa/Freezer": amostra.get('caixa', 'Não informado'),
-                    'Sangue Disponível': 'Sim' if amostra.get('sangue_disponivel') else 'Não',
-                    'DNA Disponível': 'Sim' if amostra.get('dna_disponivel') else 'Não',
-                    'RNA Disponível': 'Sim' if amostra.get('rna_disponivel') else 'Não',
-                }
-                exibir_campos(campos)
+            # Usar o ID da amostra para garantir que cada expander seja único
+            amostra_id = amostra.get('_id', 'Sem ID')
+            with st.expander(f"Amostra {amostra_id}"):
+                # --- INÍCIO DA MODIFICAÇÃO ---
 
-                # Exclusão da amostra
+                # 1. Exibir os campos não editáveis primeiro
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**ID:** `{amostra.get('_id', 'Sem ID')}`")
+                    st.markdown(f"**Animal ID:** {amostra.get('animal_id', 'Não informado')}")
+                    st.markdown(f"**Tipo:** {amostra.get('metodo_coleta', 'Não informado')}")
+                    st.markdown(f"**Local de Coleta:** {amostra.get('local_coleta', 'Não informado')}")
+
+                with col2:
+                    st.markdown(f"**Data de Coleta:** {amostra.get('data_coleta_amostra', 'Não informado')}")
+                    st.markdown(f"**Caixa/Freezer:** {amostra.get('caixa', 'Não informado')}")
+                    st.markdown(f"**Observações:** {amostra.get('observacoes', 'Nenhuma')}")
+
+                st.markdown("---")
+                st.subheader("Disponibilidade")
+
+                # 2. Criar checkboxes interativos para alterar a disponibilidade
+                col_sangue, col_dna, col_rna = st.columns(3)
+
+                # Obter o estado atual do banco de dados (True/False)
+                sangue_disponivel_atual = amostra.get('sangue_disponivel', False)
+                dna_disponivel_atual = amostra.get('dna_disponivel', False)
+                rna_disponivel_atual = amostra.get('rna_disponivel', False)
+
+                # Criar os checkboxes. O valor deles será o novo estado.
+                with col_sangue:
+                    novo_status_sangue = st.checkbox(
+                        "Sangue Disponível",
+                        value=sangue_disponivel_atual,
+                        key=f"sangue_{amostra_id}" # Chave única para cada checkbox
+                    )
+                with col_dna:
+                    novo_status_dna = st.checkbox(
+                        "DNA Disponível",
+                        value=dna_disponivel_atual,
+                        key=f"dna_{amostra_id}"
+                    )
+                with col_rna:
+                    novo_status_rna = st.checkbox(
+                        "RNA Disponível",
+                        value=rna_disponivel_atual,
+                        key=f"rna_{amostra_id}"
+                    )
+
+                # 3. Verificar se houve mudança e atualizar o banco de dados
+                if novo_status_sangue != sangue_disponivel_atual:
+                    amostras_col.update_one(
+                        {'_id': amostra_id},
+                        {'$set': {'sangue_disponivel': novo_status_sangue}}
+                    )
+                    st.toast("Disponibilidade de Sangue atualizada!")
+                    st.rerun() # Recarrega o script para refletir a mudança
+
+                if novo_status_dna != dna_disponivel_atual:
+                    amostras_col.update_one(
+                        {'_id': amostra_id},
+                        {'$set': {'dna_disponivel': novo_status_dna}}
+                    )
+                    st.toast("Disponibilidade de DNA atualizada!")
+                    st.rerun()
+
+                if novo_status_rna != rna_disponivel_atual:
+                    amostras_col.update_one(
+                        {'_id': amostra_id},
+                        {'$set': {'rna_disponivel': novo_status_rna}}
+                    )
+                    st.toast("Disponibilidade de RNA atualizada!")
+                    st.rerun()
+
+                # --- FIM DA MODIFICAÇÃO ---
+
+                # Seção de Exclusão (inalterada)
                 st.markdown("---")
                 st.warning(
                     "Esta ação é irreversível. Tem certeza que deseja excluir esta amostra?")
-                if st.button("Confirmar exclusão", key=f"del_amostra_{amostra.get('_id')}"):
-                    amostras_col.delete_one({"_id": amostra['_id']})
+                if st.button("Confirmar exclusão", key=f"del_amostra_{amostra_id}"):
+                    amostras_col.delete_one({"_id": amostra_id})
                     st.success(
                         "Amostra excluída com sucesso! Atualize a página para ver a lista atualizada.")
+                    st.rerun()
 
-        # Paginação embaixo
+        # Paginação embaixo (inalterada)
         pagina = st.number_input(
             "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1),
             value=st.session_state.get("pagina_amostra", 1), step=1, key="pagina_amostra"

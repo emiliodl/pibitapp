@@ -160,6 +160,9 @@ with tab_amostra:
         amostra_disponibilidade = st.checkbox("Sangue disponível para uso?")
         amostra_dna = st.checkbox("DNA disponível para uso?")
         amostra_rna = st.checkbox("RNA disponível para uso?")
+        amostra_sequenciamento = st.selectbox(
+            "Sequenciamento realizado?", ["", "Sim", "Não"]
+        )
 
         submit_amostra = st.form_submit_button("Registrar Amostra")
 
@@ -187,7 +190,8 @@ with tab_amostra:
                     "caixa": amostra_caixa,
                     "sangue_disponivel": amostra_disponibilidade,
                     "dna_disponivel": amostra_dna,
-                    "rna_disponivel": amostra_rna
+                    "rna_disponivel": amostra_rna,
+                    'sequenciamento': amostra_sequenciamento
                 }
                 amostra_data = {
                     k: v for k, v in amostra_data.items() if v not in (None, "", [])}
