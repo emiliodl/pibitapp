@@ -191,6 +191,7 @@ with tab2:
                     st.markdown(f"**Data de Coleta:** {amostra.get('data_coleta_amostra', 'Não informado')}")
                     st.markdown(f"**Caixa/Freezer:** {amostra.get('caixa', 'Não informado')}")
                     st.markdown(f"**Observações:** {amostra.get('observacoes', 'Nenhuma')}")
+                    st.markdown(f"**Sequenciamento:** {amostra.get('Sequenciamento', 'Amostra não sequenciada')}")
 
                 st.markdown("---")
                 st.subheader("Disponibilidade")
