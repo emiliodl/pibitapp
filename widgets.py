@@ -16,11 +16,13 @@ from utils import (
 )
 from pymongo import MongoClient
 
+
 def connect_to_mongo():
     uri = ("mongodb+srv://emiliods79:uD5A2J4o38dpk0hX@cluster0.ufpae.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
     client = MongoClient(uri)
     db = client['pibit_app']  # Ou já especificado na URI, se preferir.
     return db
+
 
 class __login__:
     def __init__(
@@ -38,10 +40,9 @@ class __login__:
         self.logout_button_name = logout_button_name
         self.hide_menu_bool = hide_menu_bool
         self.hide_footer_bool = hide_footer_bool
-    
+
     def get_username(self):
         return st.session_state.get('username', None)
-
 
     def check_auth_json_file_exists(self, auth_filename: str) -> bool:
         files = [
@@ -62,23 +63,34 @@ class __login__:
                     if not authenticated:
                         st.error("Usuário ou senha inválida")
                     else:
+                        # Atualiza último login
+                        db = connect_to_mongo()
+                        last_login = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        db["usuarios"].update_one(
+                            {"username": username},
+                            {"$set": {"last_login": last_login}}
+                        )
+
                         st.session_state['LOGGED_IN'] = True
                         st.session_state['username'] = username
                         st.rerun()
 
     def sign_up_widget(self) -> None:
         with st.form("register_form"):
-            username_sign_up = st.text_input("Usuário/Nome *", placeholder='Digite um usuário')
+            username_sign_up = st.text_input(
+                "Usuário/Nome *", placeholder='Digite um usuário')
             unique_username_check = check_unique_usr(username_sign_up)
 
-            email_sign_up = st.text_input("Email *", placeholder='Digite seu email')
+            email_sign_up = st.text_input(
+                "Email *", placeholder='Digite seu email')
             valid_email_check = check_valid_email(email_sign_up)
             unique_email_check = check_unique_email(email_sign_up)
 
             password_sign_up = st.text_input("Senha *", type='password')
             matricula_sign_up = st.selectbox(
                 "Tipo de Usuário *",
-                ["Bolsista UFPI", "Bolsista Externo", "Mestrando", "Doutorando", "Professor"]
+                ["Bolsista UFPI", "Bolsista Externo",
+                    "Mestrando", "Doutorando", "Professor"]
             )
 
             submitted = st.form_submit_button("Registrar")
@@ -106,11 +118,13 @@ class __login__:
         for u in users:
             u['matricula'] = u.get('matricula', 'N/A')
             u['created_at'] = u.get('created_at', 'N/A')
+            u['last_login'] = u.get('last_login', 'Nunca')
 
         df = pd.DataFrame(users)
         if not df.empty:
             st.title("Usuários Registrados")
-            st.table(df[['username', 'name', 'email', 'matricula', 'created_at']])
+            st.table(
+                df[['username', 'name', 'email', 'matricula', 'created_at', 'last_login']])
         else:
             st.info("Nenhum usuário encontrado.")
 
@@ -151,10 +165,12 @@ class __login__:
         return menu, selected
 
     def hide_menu(self) -> None:
-        st.markdown("""<style>#MainMenu{visibility:hidden;}</style>""", unsafe_allow_html=True)
+        st.markdown(
+            """<style>#MainMenu{visibility:hidden;}</style>""", unsafe_allow_html=True)
 
     def hide_footer(self) -> None:
-        st.markdown("""<style>footer{visibility:hidden;}</style>""", unsafe_allow_html=True)
+        st.markdown(
+            """<style>footer{visibility:hidden;}</style>""", unsafe_allow_html=True)
 
     def build_login_ui(self):
         # inicializa chaves de sessão

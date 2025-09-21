@@ -149,6 +149,7 @@ with tab_amostra:
         amostra_data_coleta = st.date_input(
             "Data da Coleta da Amostra", value=date.today())
         amostra_nome_coletor = st.text_input("Nome do Coletor")
+        amostra_id_projeto = st.text_input("ID do Projeto (opcional)")
         amostra_metodo_coleta = st.selectbox(
             "Amostra coletada via",
             ["", "Swab nasal", "Swab oral", "Swab cloacal", "Sangue", "Necrópsia", 'Fezes', 'Tecido', 'Pele', 'Pelo','Esfregaço sanguíneo', 'Outros']
@@ -157,6 +158,10 @@ with tab_amostra:
             "Condição de Armazenamento",
             ["", "Temperatura ambiente", "Refrigerada", "Congelada",
                 "Sem identificação", "Coagulada", "Hemolisada", 'Nitrogênio líquido', 'Gelo seco']
+        )
+        amostra_fase = st.selectbox(
+            "Fase da Amostra",
+            ["", "Extração", "PCR", "ELETRO"]
         )
         amostra_destino = st.selectbox(
             "Destino da Amostra",
@@ -189,6 +194,7 @@ with tab_amostra:
                     "_id": amostra_id_input,
                     "animal_id": linked_animal_id,
                     "local_coleta_amostra": amostra_local_coleta,
+                    'amostra_id_projeto': amostra_id_projeto,
                     "data_coleta_amostra": str(amostra_data_coleta),
                     "nome_coletor": amostra_nome_coletor,
                     "metodo_coleta": amostra_metodo_coleta,
