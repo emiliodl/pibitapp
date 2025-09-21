@@ -66,17 +66,27 @@ with tab_animal:
         animal_hvu = st.text_input(
             "ID do HVU (Hospital Veterinário Universitário)")
         animal_microchip = st.text_input("Microchip")
-        animal_orgao = st.text_input("Origem (Órgão responsável)")
-        animal_status = st.text_input("Status")
-        animal_funcao = st.text_input("Função (opcional)")
+        animal_orgao = st.selectbox(
+            'Órgão de Origem', ['UFPI', 'NEPPAS', 'IBAMA - CETAS - PI', 'IBAMA - CETAS - CE', 'IBAMA - CETAS - RN', 'SEMARH - CETAS - PI',
+            'UFPA', 'UFRR', 'UFAC', 'UFOB', 'DSEI LESTE - AM', 'ZOOLOGICO -PI', 'PARTICULAR', 'Outro']
+        )
+        animal_status = st.selectbox(
+            'Status do Animal', ["", "Vida livre", "Cativeiro"]
+        )
+        animal_funcao = st.selectbox(
+            'Função', ["PET", "Trabalho", "Lazer", "Outros"]
+        )
         animal_local_origem = st.text_input("Local de Origem")
         animal_idade = st.text_input("Idade (opcional)")
         animal_faixa_etaria = st.selectbox(
-            'Faixa Etária (opcional)', ["Filhote", "Suvenil",' Sub Adulto', "Adulto", "Senil"]
+            'Faixa Etária (Obrigatório)', ["Filhote", "Suvenil",' Sub Adulto', "Adulto", "Senil"]
         )
         animal_observacoes = st.text_area("Observações (opcional)")
         animal_classe = st.selectbox(
             'Classe', ["Ave", "Mamífero", "Répteis",' Anfíbios', "Peixes"]
+        )
+        animal_suspeita = st.text_input(
+            'Suspeita Clínica'
         )
         submit_animal = st.form_submit_button("Registrar Animal")
 
@@ -140,24 +150,26 @@ with tab_amostra:
             "Data da Coleta da Amostra", value=date.today())
         amostra_nome_coletor = st.text_input("Nome do Coletor")
         amostra_metodo_coleta = st.selectbox(
-            "Método de Coleta",
-            ["", "Swab nasal", "Swab oral", "Swab cloacal", "Sangue", "Necrópsia"]
+            "Amostra coletada via",
+            ["", "Swab nasal", "Swab oral", "Swab cloacal", "Sangue", "Necrópsia", 'Fezes', 'Tecido', 'Pele', 'Pelo','Esfregaço sanguíneo', 'Outros']
         )
         amostra_condicao = st.selectbox(
-            "Condição da Amostra",
+            "Condição de Armazenamento",
             ["", "Temperatura ambiente", "Refrigerada", "Congelada",
-                "Sem identificação", "Coagulada", "Hemolisada"]
+                "Sem identificação", "Coagulada", "Hemolisada", 'Nitrogênio líquido', 'Gelo seco']
         )
-        amostra_destino = st.text_input(
-            "Destino da Amostra (e.g., Laboratório X, Biobanco)")
-        amostra_latitude = st.text_input("Latitude (opcional)")
+        amostra_destino = st.selectbox(
+            "Destino da Amostra",
+            ["", "Biobanco UFPI", "Biobanco UFPA", "Fiofruz AM", "LASAN UFPI", 'LAPATO UFPI', 'LAPATO UFPA', 'LAB VIGILÂNCIA DE EPIZOOTIAS - UFPI', 'Outro']
+        )
         amostra_kit = st.text_input("Kit utilizado (opcional)")
         amostra_longitude = st.text_input("Longitude (opcional)")
+        amostra_latitude = st.text_input("Latitude (opcional)")
         amostra_resultado_exame = st.text_input(
             "Resultado do Exame (inicial, opcional)")
         amostra_observacoes = st.text_area("Observações (opcional)")
         amostra_caixa = st.text_input("Caixa de amarzenamento/Freezer (opcional)")
-        amostra_disponibilidade = st.checkbox("Sangue disponível para uso?")
+        amostra_disponibilidade = st.checkbox("Amostra disponível para uso?")
         amostra_dna = st.checkbox("DNA disponível para uso?")
         amostra_rna = st.checkbox("RNA disponível para uso?")
         amostra_sequenciamento = st.selectbox(
@@ -227,11 +239,18 @@ with tab_exame:
         if selected_amostra_str and " (ID: " in selected_amostra_str:
             linked_amostra_id = selected_amostra_str.split(" (ID: ")[1][:-1]
 
-        exame_tipo = st.text_input("Tipo de Exame")
+        exame_tipo = st.selectbox("Patógeno investigado", ['Febre do Nilo, '
+        'ORTHOFLAVIRIDAE', 'FEBRE AMARELA', 'MYCOPLASMA', 'HERPESVIRIDAE', 'TRIPANOSTOMATIDAE',
+        'RESISTÊNCIA BACTERIANA', ' HEPATOZOON', 'RAIVA', ''])
         exame_laboratorio = st.text_input("Laboratório Realizador")
+        exame_teste= st.selectbox("Teste Laboratorial", 
+                                  ['PCR', 'Sorológico', 'Coproparasitológico', 'Hemoparasito em lâmina','Outro', ''])
         exame_data_realizacao = st.date_input(
             "Data de Realização", value=date.today())
-        exame_resultado = st.text_area("Resultado do Exame")
+        exame_resultado = st.selectbox(
+            "Resultado do Exame",
+            ["", "Positivo", "Negativo", "Inconclusivo", "Aguardando Resultado"]
+        )
         exame_responsavel = st.text_input("Responsável pelo Exame")
         exame_procotocolo = st.text_input("Protocolo Utilizado")
         exame_observacoes = st.text_area("Observações do Exame (opcional)")
@@ -249,6 +268,7 @@ with tab_exame:
                     "_id": exame_id_input,
                     "amostra_id": linked_amostra_id,  # Vincula ao ID da amostra
                     "tipo_exame": exame_tipo,
+                    'teste_laboratorial': exame_teste,
                     "laboratorio_realizador": exame_laboratorio,
                     "data_realizacao": str(exame_data_realizacao),
                     "resultado_detalhado": exame_resultado,
