@@ -63,6 +63,7 @@ if uploaded_file is not None:
                 "condicao": "condicao_amostra",
                 "destino": "destino_amostra",
                 "resultado_do_exame": "resultado_exame",
+                'kit_utilizado': 'amostra_kit',
                 "observacoes_da_amostra": "observacoes",
             }
         elif tipo_planilha == "Animais":
