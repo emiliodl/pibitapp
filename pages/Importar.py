@@ -80,6 +80,7 @@ if uploaded_file is not None:
                 "local_origem": "local_origem",
                 "data_nascimento": "data_nascimento",
                 "observacoes": "observacoes",
+                'id_projeto': 'animal_id_projeto',
             }
         elif tipo_planilha == "Exames":
             renomear = {

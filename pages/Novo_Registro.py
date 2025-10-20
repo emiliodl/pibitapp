@@ -57,6 +57,7 @@ with tab_animal:
         st.markdown("**Informações do Animal**")
         animal_id_input = st.text_input(
             "ID do Animal (único)", placeholder="Ex: ANM001")
+        animal_id_projeto = st.text_input("ID do Projeto (opcional)")
         animal_nome_comum = st.text_input("Nome Comum")
         animal_nome_cientifico = st.text_input("Nome Científico")
         animal_sexo = st.selectbox(
@@ -95,7 +96,10 @@ with tab_animal:
                 st.error("Por favor, insira um ID único para o animal.")
             else:
                 animal_data = {
-                    "_id": animal_id_input,  # Usa o ID fornecido pelo usuário
+                    "_id": animal_id_input, 
+                    'animal_id_projeto': animal_id_projeto,
+                    "classe": animal_classe,
+                    "suspeita_clinica": animal_suspeita,
                     "nome_comum": animal_nome_comum,
                     "nome_cientifico": animal_nome_cientifico,
                     "sexo": animal_sexo,
