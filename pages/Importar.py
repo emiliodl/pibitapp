@@ -49,9 +49,8 @@ if uploaded_file is not None:
         else:
             df = pd.read_excel(uploaded_file)
 
-        # Padronização dos nomes das colunas para minúsculas e sem espaços
-        df.columns = [col.strip().lower().replace(" ", "_")
-                      for col in df.columns]
+        # Padronização dos nomes das colunas
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
         # Renomeie para os nomes usados no sistema, se necessário
         renomear = {}
@@ -106,12 +105,11 @@ if uploaded_file is not None:
             }
         df.rename(columns=renomear, inplace=True)
 
-
-        # Converter hora para string, se existir
-        if 'hora' in df.columns:
-            df['hora'] = df['hora'].apply(
-                lambda x: x.isoformat() if isinstance(x, datetime.time) else str(x)
-            )
+        # Adicionar seleção do modo de importação
+        modo_importacao = st.radio(
+            "Selecione o modo de importação:",
+            ["Inserir novos registros", "Atualizar registros existentes", "Inserir e atualizar"]
+        )
 
         st.subheader("Visualização dos Dados")
         st.dataframe(df.head())
@@ -122,10 +120,41 @@ if uploaded_file is not None:
                 {k: v for k, v in row.items() if pd.notnull(v) and v != ""}
                 for row in df.to_dict(orient="records")
             ]
-            resultado = collection.insert_many(dados)
-            st.success(
-                f"Foram inseridos {len(resultado.inserted_ids)} documentos na coleção '{collection.name}'!"
-            )
+
+            # Verificar IDs existentes
+            ids_novos = [d.get('_id') for d in dados]
+            ids_existentes = [doc['_id'] for doc in collection.find({}, {"_id": 1})]
+            
+            # Separar registros novos e existentes
+            registros_novos = [d for d in dados if d.get('_id') not in ids_existentes]
+            registros_atualizar = [d for d in dados if d.get('_id') in ids_existentes]
+
+            novos_inseridos = 0
+            atualizados = 0
+
+            if modo_importacao in ["Inserir novos registros", "Inserir e atualizar"] and registros_novos:
+                resultado = collection.insert_many(registros_novos)
+                novos_inseridos = len(resultado.inserted_ids)
+
+            if modo_importacao in ["Atualizar registros existentes", "Inserir e atualizar"] and registros_atualizar:
+                for registro in registros_atualizar:
+                    collection.replace_one(
+                        {"_id": registro['_id']},
+                        registro,
+                        upsert=True
+                    )
+                    atualizados += 1
+
+            # Feedback detalhado
+            if novos_inseridos > 0 or atualizados > 0:
+                mensagem = "Importação concluída!\n"
+                if novos_inseridos > 0:
+                    mensagem += f"- {novos_inseridos} novos registros inseridos\n"
+                if atualizados > 0:
+                    mensagem += f"- {atualizados} registros atualizados"
+                st.success(mensagem)
+            else:
+                st.warning("Nenhum registro foi inserido ou atualizado.")
 
     except Exception as e:
         st.error(f"Ocorreu um erro ao importar os dados: {e}")
