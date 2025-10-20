@@ -73,7 +73,8 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # ---------------- TAB 1: Animais ----------------
 with tab1:
     st.header("Animais Registrados")
-    busca = st.text_input("Buscar animal por nome comum, científico ou microchip:")
+    busca = st.text_input(
+        "Buscar animal por nome comum, científico ou microchip:")
     animais = carregar_animais_mongo()
     amostras = carregar_amostras_mongo()
 
@@ -183,15 +184,22 @@ with tab2:
                 col1, col2 = st.columns(2)
                 with col1:
                     st.markdown(f"**ID:** `{amostra.get('_id', 'Sem ID')}`")
-                    st.markdown(f"**Animal ID:** {amostra.get('animal_id', 'Não informado')}")
-                    st.markdown(f"**Tipo:** {amostra.get('metodo_coleta', 'Não informado')}")
-                    st.markdown(f"**Local de Coleta:** {amostra.get('local_coleta', 'Não informado')}")
+                    st.markdown(
+                        f"**Animal ID:** {amostra.get('animal_id', 'Não informado')}")
+                    st.markdown(
+                        f"**Tipo:** {amostra.get('metodo_coleta', 'Não informado')}")
+                    st.markdown(
+                        f"**Local de Coleta:** {amostra.get('local_coleta', 'Não informado')}")
 
                 with col2:
-                    st.markdown(f"**Data de Coleta:** {amostra.get('data_coleta_amostra', 'Não informado')}")
-                    st.markdown(f"**Caixa/Freezer:** {amostra.get('caixa', 'Não informado')}")
-                    st.markdown(f"**Observações:** {amostra.get('observacoes', 'Nenhuma')}")
-                    st.markdown(f"**Sequenciamento:** {amostra.get('Sequenciamento', 'Amostra não sequenciada')}")
+                    st.markdown(
+                        f"**Data de Coleta:** {amostra.get('data_coleta_amostra', 'Não informado')}")
+                    st.markdown(
+                        f"**Caixa/Freezer:** {amostra.get('caixa', 'Não informado')}")
+                    st.markdown(
+                        f"**Observações:** {amostra.get('observacoes', 'Nenhuma')}")
+                    st.markdown(
+                        f"**Sequenciamento:** {amostra.get('Sequenciamento', 'Amostra não sequenciada')}")
 
                 st.markdown("---")
                 st.subheader("Disponibilidade")
@@ -200,7 +208,8 @@ with tab2:
                 col_sangue, col_dna, col_rna = st.columns(3)
 
                 # Obter o estado atual do banco de dados (True/False)
-                sangue_disponivel_atual = amostra.get('sangue_disponivel', False)
+                sangue_disponivel_atual = amostra.get(
+                    'sangue_disponivel', False)
                 dna_disponivel_atual = amostra.get('dna_disponivel', False)
                 rna_disponivel_atual = amostra.get('rna_disponivel', False)
 
@@ -209,7 +218,8 @@ with tab2:
                     novo_status_sangue = st.checkbox(
                         "Sangue Disponível",
                         value=sangue_disponivel_atual,
-                        key=f"sangue_{amostra_id}" # Chave única para cada checkbox
+                        # Chave única para cada checkbox
+                        key=f"sangue_{amostra_id}"
                     )
                 with col_dna:
                     novo_status_dna = st.checkbox(
@@ -231,7 +241,7 @@ with tab2:
                         {'$set': {'sangue_disponivel': novo_status_sangue}}
                     )
                     st.toast("Disponibilidade de Sangue atualizada!")
-                    st.rerun() # Recarrega o script para refletir a mudança
+                    st.rerun()  # Recarrega o script para refletir a mudança
 
                 if novo_status_dna != dna_disponivel_atual:
                     amostras_col.update_one(
@@ -298,10 +308,18 @@ with tab3:
             f"Mostrando {inicio+1} a {min(fim, total)} de {total} exames")
         for exame in exames_pagina:
             with st.expander(f"Exame {exame.get('_id', 'Sem ID')}"):
+                # Buscar a amostra relacionada
+                amostra = next((a for a in amostras if a.get(
+                    '_id') == exame.get('amostra_id')), None)
+                # Buscar o animal relacionado à amostra
+                animal = None
+                if amostra:
+                    animal = next((an for an in animais if an.get(
+                        '_id') == amostra.get('animal_id')), None)
+
                 campos = {
                     "ID": exame.get('_id', 'Sem ID'),
-                    "Amostra ID": exame.get('amostra_id', 'Não informado'),
-                    "Animal ID": exame.get('animal_id', 'Não informado'),
+                    "Amostra": f"{exame.get('amostra_id', 'Não informado')} ({animal.get('nome_comum', 'Animal não encontrado')} - {animal.get('_id', '')})" if animal else exame.get('amostra_id', 'Não informado'),
                     "Tipo de Exame": exame.get('tipo_exame', 'Não informado'),
                     "Laboratório Realizador": exame.get('laboratorio_realizador', 'Não informado'),
                     "Data de Realização": exame.get('data_realizacao', 'Não informado'),
@@ -311,7 +329,7 @@ with tab3:
                 }
                 exibir_campos(campos)
 
-                # Exclusão do exame
+                # Exclusão do exame (mantido como está)
                 st.markdown("---")
                 st.warning(
                     "Esta ação é irreversível. Tem certeza que deseja excluir este exame?")
