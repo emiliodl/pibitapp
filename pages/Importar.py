@@ -50,7 +50,8 @@ if uploaded_file is not None:
             df = pd.read_excel(uploaded_file)
 
         # Padronização dos nomes das colunas
-        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        df.columns = [col.strip().lower().replace(" ", "_")
+                      for col in df.columns]
 
         # Renomeie para os nomes usados no sistema, se necessário
         renomear = {}
@@ -83,13 +84,16 @@ if uploaded_file is not None:
             }
         elif tipo_planilha == "Exames":
             renomear = {
-                "amostra_id": "amostra_id",
-                "tipo_de_exame": "tipo_exame",
-                "laboratorio_realizador": "laboratorio_realizador",
-                "data_de_realizacao": "data_realizacao",
-                "resultado_detalhado": "resultado_detalhado",
-                "responsavel_exame": "responsavel_exame",
-                "observacoes_do_exame": "observacoes_exame",
+                'id': '_id',
+                'amostra_id': 'amostra_id',
+                'tipo_de_exame': 'tipo_exame',
+                'teste_laboratorial': 'teste_laboratorial',
+                'laboratorio_realizador': 'laboratorio_realizador',
+                'data_de_realizacao': 'data_realizacao',
+                'resultado_detalhado': 'resultado_detalhado',
+                'responsavel_exame': 'responsavel_exame',
+                'protocolo_exame': 'protocolo_exame',
+                'observacoes_do_exame': 'observacoes_exame'
             }
         elif tipo_planilha == "Reagentes":
             renomear = {
@@ -108,7 +112,8 @@ if uploaded_file is not None:
         # Adicionar seleção do modo de importação
         modo_importacao = st.radio(
             "Selecione o modo de importação:",
-            ["Inserir novos registros", "Atualizar registros existentes", "Inserir e atualizar"]
+            ["Inserir novos registros",
+                "Atualizar registros existentes", "Inserir e atualizar"]
         )
 
         st.subheader("Visualização dos Dados")
@@ -123,11 +128,14 @@ if uploaded_file is not None:
 
             # Verificar IDs existentes
             ids_novos = [d.get('_id') for d in dados]
-            ids_existentes = [doc['_id'] for doc in collection.find({}, {"_id": 1})]
-            
+            ids_existentes = [doc['_id']
+                              for doc in collection.find({}, {"_id": 1})]
+
             # Separar registros novos e existentes
-            registros_novos = [d for d in dados if d.get('_id') not in ids_existentes]
-            registros_atualizar = [d for d in dados if d.get('_id') in ids_existentes]
+            registros_novos = [d for d in dados if d.get(
+                '_id') not in ids_existentes]
+            registros_atualizar = [
+                d for d in dados if d.get('_id') in ids_existentes]
 
             novos_inseridos = 0
             atualizados = 0
