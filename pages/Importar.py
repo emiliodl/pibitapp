@@ -194,6 +194,7 @@ else:
                     "quantidade": "quantidade",
                     "unidade": "unidade",
                     "local_de_armazenamento": "local_armazenamento",
+                    'etapa': 'etapa',
                     "observacoes_do_reagente": "observacoes",
                 }
             df.rename(columns=renomear, inplace=True)

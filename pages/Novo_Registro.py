@@ -313,6 +313,7 @@ with tab_reagente:
         reagente_local_armazenamento = st.text_input("Local de Armazenamento")
         reagente_observacoes = st.text_area(
             "Observações do Reagente (opcional)")
+        reagente_etapa = st.text_input("Etapa do Processo (opcional)")
 
         submit_reagente = st.form_submit_button("Registrar Reagente")
 
@@ -329,6 +330,7 @@ with tab_reagente:
                     "data_validade": str(reagente_validade),
                     "quantidade": reagente_quantidade,
                     "local_armazenamento": reagente_local_armazenamento,
+                    'etapa': reagente_etapa,
                     "observacoes": reagente_observacoes
                 }
                 reagente_data = {
