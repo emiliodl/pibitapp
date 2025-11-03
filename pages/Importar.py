@@ -175,7 +175,7 @@ else:
                 renomear = {
                     'id': '_id',
                     'amostra_id': 'amostra_id',
-                    'tipo_de_exame': 'tipo_exame',
+                    'tipo_exame': 'tipo_exame',
                     'teste_laboratorial': 'teste_laboratorial',
                     'laboratorio_realizador': 'laboratorio_realizador',
                     'data_de_realizacao': 'data_realizacao',
