@@ -209,50 +209,135 @@ else:
             st.subheader("Visualização dos Dados")
             st.dataframe(df.head())
 
+            # controles extras
+            st.info("Opções de importação")
+            modo_importacao = st.radio(
+                "Modo de importação:",
+                ["Inserir novos registros",
+                    "Atualizar registros existentes", "Inserir e atualizar"],
+                index=2
+            )
+            conflito = st.radio(
+                "Tratamento de duplicatas (_id):",
+                ["Pular duplicatas",
+                    "Sobrescrever (replace)", "Manter e atualizar campos (upsert)"],
+                index=0
+            )
+            dry_run = st.checkbox(
+                "Simular importação (dry-run) — não grava no banco", value=True)
+            chunk_size = st.number_input(
+                "Tamanho do lote (chunk) para inserção", min_value=50, max_value=1000, value=200, step=50)
+
             if st.button("Importar dados"):
-                # Remove campos vazios de cada registro
+                # normaliza e prepara registros
                 dados = [
-                    {k: v for k, v in row.items() if pd.notnull(v) and v != ""}
+                    {k: (v.strftime('%Y-%m-%d') if isinstance(v, (pd.Timestamp, datetime.date)) else v)
+                     for k, v in row.items() if pd.notnull(v) and v != ""}
                     for row in df.to_dict(orient="records")
                 ]
 
-                # Verificar IDs existentes
-                ids_novos = [d.get('_id') for d in dados]
-                ids_existentes = [doc['_id']
-                                  for doc in collection.find({}, {"_id": 1})]
+                # ids existentes no banco
+                ids = [d.get('_id') for d in dados if d.get('_id') is not None]
+                existentes_cursor = collection.find(
+                    {"_id": {"$in": ids}}, {"_id": 1})
+                ids_existentes = set([d["_id"] for d in existentes_cursor])
 
-                # Separar registros novos e existentes
                 registros_novos = [d for d in dados if d.get(
                     '_id') not in ids_existentes]
-                registros_atualizar = [
+                registros_existentes = [
                     d for d in dados if d.get('_id') in ids_existentes]
 
-                novos_inseridos = 0
-                atualizados = 0
+                st.write(
+                    f"Total linhas: {len(dados)} — Novos: {len(registros_novos)} — Existentes: {len(registros_existentes)}")
 
-                if modo_importacao in ["Inserir novos registros", "Inserir e atualizar"] and registros_novos:
-                    resultado = collection.insert_many(registros_novos)
-                    novos_inseridos = len(resultado.inserted_ids)
+                if dry_run:
+                    st.success(
+                        "Dry-run ativo — nenhuma alteração será feita no banco.")
+                    # mostra amostra de registros novos/existentes
+                    if registros_novos:
+                        st.write("Exemplo de novos registros (primeiros 5):")
+                        st.dataframe(pd.DataFrame(registros_novos[:5]))
+                    if registros_existentes:
+                        st.write(
+                            "Exemplo de registros existentes (primeiros 5):")
+                        st.dataframe(pd.DataFrame(registros_existentes[:5]))
+                    st.stop()
 
-                if modo_importacao in ["Atualizar registros existentes", "Inserir e atualizar"] and registros_atualizar:
-                    for registro in registros_atualizar:
-                        collection.replace_one(
-                            {"_id": registro['_id']},
-                            registro,
-                            upsert=True
-                        )
-                        atualizados += 1
+                # execução real: processa registros de acordo com opções
+                inserted = 0
+                updated = 0
+                errors = []
 
-                # Feedback detalhado
-                if novos_inseridos > 0 or atualizados > 0:
-                    mensagem = "Importação concluída!\n"
-                    if novos_inseridos > 0:
-                        mensagem += f"- {novos_inseridos} novos registros inseridos\n"
-                    if atualizados > 0:
-                        mensagem += f"- {atualizados} registros atualizados"
-                    st.success(mensagem)
-                else:
-                    st.warning("Nenhum registro foi inserido ou atualizado.")
+                from pymongo.errors import DuplicateKeyError, BulkWriteError
 
+                # upsert parcial: atualiza somente campos não-nulos (exceto _id)
+                def merge_and_upsert(doc):
+                    _id = doc.get('_id')
+                    if _id is None:
+                        errors.append(
+                            {'_id': None, 'errmsg': 'Documento sem _id; não será upsertado', 'op': doc})
+                        return
+                    update_fields = {k: v for k, v in doc.items(
+                    ) if k != '_id' and v is not None and v != ""}
+                    if update_fields:
+                        try:
+                            collection.update_one(
+                                {'_id': _id}, {'$set': update_fields}, upsert=True)
+                        except Exception as e:
+                            errors.append({'_id': _id, 'errmsg': str(e)})
+
+                # validar documentos sem _id antes de inserir/atualizar
+                sem_id = [d for d in dados if d.get('_id') is None]
+                if sem_id:
+                    st.warning(
+                        f"{len(sem_id)} linhas sem _id encontradas — serão inseridas com ObjectId automático. Verifique referências.")
+                    # opcional: listar exemplos
+                    st.dataframe(pd.DataFrame(sem_id[:5]))
+
+                # inserir novos em chunks (ordered=False para prosseguir em erros)
+                for i in range(0, len(registros_novos), chunk_size):
+                    chunk = registros_novos[i:i+chunk_size]
+                    try:
+                        res = collection.insert_many(chunk, ordered=False)
+                        inserted += len(res.inserted_ids)
+                    except BulkWriteError as bwe:
+                        write_errors = bwe.details.get("writeErrors", [])
+                        inserted += len(chunk) - len(write_errors)
+                        for we in write_errors:
+                            err = {'index': we.get('index'), 'op': we.get(
+                                'op'), 'errmsg': we.get('errmsg')}
+                            errors.append(err)
+                    except Exception as e:
+                        errors.append({'op_chunk': i, 'errmsg': str(e)})
+
+                # tratar existentes conforme escolha do usuário (usar a variável 'conflito' corretamente)
+                if conflito == "Pular duplicatas":
+                    pass
+                elif conflito == "Sobrescrever (replace)":
+                    for doc in registros_existentes:
+                        _id = doc.get('_id')
+                        try:
+                            collection.replace_one(
+                                {"_id": _id}, doc, upsert=False)
+                            updated += 1
+                        except Exception as e:
+                            errors.append({"_id": _id, "errmsg": str(e)})
+                elif conflito == "Manter e atualizar campos (upsert)":
+                    for doc in registros_existentes:
+                        merge_and_upsert(doc)
+                        updated += 1
+
+                # relatório final
+                st.write("Relatório da importação:")
+                st.success(f"Inseridos: {inserted}  —  Atualizados: {updated}")
+                if errors:
+                    st.error(
+                        f"Ocorreram {len(errors)} erros. Exibir detalhes abaixo.")
+                    st.json(errors)
+                    df_err = pd.json_normalize(errors)
+                    csv_err = df_err.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        "Baixar CSV de erros", data=csv_err, file_name="import_errors.csv", mime="text/csv"
+                    )
         except Exception as e:
-            st.error(f"Ocorreu um erro ao importar os dados: {e}")
+            st.error(f"Erro ao processar o arquivo: {e}")
