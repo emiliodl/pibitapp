@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import os
 import pandas as pd
 import plotly.express as px
+import unicodedata
 
 # --- Conexão ao MongoDB ---
 
@@ -26,11 +27,46 @@ reagentes_col = db['reagentes']
 
 st.title("Relatórios e Estatísticas do Sistema")
 
+# --- normalização do campo sexo ---
+
+
+def normalize_sexo_raw(val):
+    if val is None:
+        return "indeterminado"
+    s = str(val).strip().lower()
+    # remover acentos
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(ch for ch in s if not unicodedata.combining(ch))
+    # mapear variantes comuns
+    if s in ("femea", "femea.", "f", "f.", "fem", "fêmea", "female", "feminino", "feminino."):
+        return "femea"
+    if s in ("macho", "m", "m.", "male", "masculino", "masculino."):
+        return "macho"
+    # valores que indicam desconhecido/indeterminado
+    if s in ("", "nao informado", "nao", "n/a", "none", "indeterminado", "desconhecido", "unknown"):
+        return "indeterminado"
+    # fallback simples: tenta detectar por prefixo
+    if s.startswith("f"):
+        return "femea"
+    if s.startswith("m"):
+        return "macho"
+    return "indeterminado"
+
+
 # --- Coleta de Dados ---
 animais = list(animais_col.find())
 amostras = list(amostras_col.find())
 exames = list(exames_col.find())
 reagentes = list(reagentes_col.find())
+
+# normalizar antes de criar DataFrame/relatórios
+df_animais = pd.DataFrame(animais)
+if not df_animais.empty:
+    if "sexo" in df_animais.columns:
+        df_animais["sexo_normalizado"] = df_animais["sexo"].apply(
+            normalize_sexo_raw)
+    else:
+        df_animais["sexo_normalizado"] = "indeterminado"
 
 # --- KPIs ---
 col1, col2, col3, col4 = st.columns(4)
@@ -41,10 +77,11 @@ col4.metric("Reagentes cadastrados", len(reagentes))
 
 st.markdown("---")
 
-# --- Gráfico: Animais por Sexo ---
-df_animais = pd.DataFrame(animais)
-if not df_animais.empty and "sexo" in df_animais.columns:
-    fig = px.histogram(df_animais, x="sexo",
+# --- Gráfico: Animais por Sexo (usar coluna normalizada) ---
+if not df_animais.empty and "sexo_normalizado" in df_animais.columns:
+    fig = px.histogram(df_animais, x="sexo_normalizado",
+                       category_orders={"sexo_normalizado": [
+                           "femea", "macho", "indeterminado"]},
                        title="Distribuição dos Animais por Sexo")
     st.plotly_chart(fig, use_container_width=True)
 
@@ -70,7 +107,17 @@ if not df_reagentes.empty and "tipo" in df_reagentes.columns:
 # --- Tabelas detalhadas (opcional) ---
 with st.expander("Ver tabelas detalhadas"):
     st.subheader("Animais")
-    st.dataframe(df_animais)
+    # mostrar coluna original e a normalizada
+    if not df_animais.empty:
+        display_df = df_animais.copy()
+        # garantir ordenação de colunas com a normalizada ao final
+        if "sexo_normalizado" in display_df.columns:
+            cols = [c for c in display_df.columns if c !=
+                    "sexo_normalizado"] + ["sexo_normalizado"]
+            display_df = display_df[cols]
+        st.dataframe(display_df)
+    else:
+        st.info("Nenhum animal cadastrado.")
     st.subheader("Amostras")
     st.dataframe(df_amostras)
     st.subheader("Exames")
