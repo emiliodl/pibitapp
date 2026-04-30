@@ -80,7 +80,7 @@ with tab_animal:
         animal_local_origem = st.text_input("Local de Origem")
         animal_idade = st.text_input("Idade (opcional)")
         animal_faixa_etaria = st.selectbox(
-            'Faixa Etária (Obrigatório)', ["Filhote", "Suvenil",' Sub Adulto', "Adulto", "Senil"]
+            'Faixa Etária (Obrigatório)', ["Filhote", "Suvenil",' Sub Adulto', "Adulto", "Senil", "Não Informado"]
         )
         animal_observacoes = st.text_area("Observações (opcional)")
         animal_classe = st.selectbox(
