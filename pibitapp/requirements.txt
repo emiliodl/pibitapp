@@ -1,9 +1,0 @@
-streamlit
-trycourier
-regex 
-bcrypt
-datetime
-openpyxl
-pymongo
-streamlit_option_menu
-plotly
