@@ -140,6 +140,7 @@ class __login__:
                 st.rerun()
 
     def nav_sidebar(self):
+        st.sidebar.image("logo.png", use_container_width=True)
         menu = st.sidebar.empty()
         with menu:
             selected = option_menu(

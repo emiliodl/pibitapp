@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 st.markdown(
     """
     <h1 style='text-align: center; font-size: 32px; margin-top: 10px;'>
-        NEPPAS - Laboratório de Vigilância de Epizootias - UFPI
+        LABVEPI - Laboratório de Vigilância de Epizootias - UFPI
     </h1>
     """,
     unsafe_allow_html=True
