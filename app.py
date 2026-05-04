@@ -4,6 +4,14 @@ from bson import SON
 from widgets import __login__
 from datetime import datetime, timedelta
 
+# Logo no topo da sidebar (acima da lista de páginas)
+st.logo("logo.png")
+
+# Logo centralizado na página principal
+col1, col2, col3 = st.columns([1, 1, 1])
+with col2:
+    st.image("logo.png", width=200)
+
 st.markdown(
     """
     <h1 style='text-align: center; font-size: 32px; margin-top: 10px;'>
