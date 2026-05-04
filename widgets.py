@@ -73,6 +73,9 @@ class __login__:
 
                         st.session_state['LOGGED_IN'] = True
                         st.session_state['username'] = username
+                        # Armazena a role (matricula) do usuário na sessão
+                        user_doc = db["usuarios"].find_one({"username": username})
+                        st.session_state['matricula'] = user_doc.get('matricula', '') if user_doc else ''
                         st.rerun()
 
     def sign_up_widget(self) -> None:
@@ -133,6 +136,7 @@ class __login__:
             if st.sidebar.button(self.logout_button_name):
                 st.session_state['LOGGED_IN'] = False
                 st.session_state['username'] = None
+                st.session_state['matricula'] = None
                 st.rerun()
 
     def nav_sidebar(self):
@@ -176,6 +180,7 @@ class __login__:
         # inicializa chaves de sessão
         st.session_state.setdefault('LOGGED_IN', False)
         st.session_state.setdefault('username', None)
+        st.session_state.setdefault('matricula', None)
 
         # garante JSON de auth
         if not self.check_auth_json_file_exists('secret_auth.json'):

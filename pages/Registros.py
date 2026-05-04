@@ -129,97 +129,99 @@ with tab1:
             label_hvu = f" | HVU: {animal.get('id_hvu')}" if animal.get('id_hvu') else ""
             with st.expander(f"{animal.get('nome_comum', 'Sem nome')} ({animal.get('_id')}){label_hvu}", expanded=False):
                 display_document(animal, title="Dados do Animal")
-                if st.button("Editar animal", key=f"editar_animal_{animal.get('_id')}"):
-                    flag = f"editando_{animal.get('_id')}"
-                    st.session_state[flag] = not st.session_state.get(flag, False)
+                # Apenas Professores podem editar animais
+                if st.session_state.get('matricula') == 'Professor':
+                    if st.button("Editar animal", key=f"editar_animal_{animal.get('_id')}"):
+                        flag = f"editando_{animal.get('_id')}"
+                        st.session_state[flag] = not st.session_state.get(flag, False)
 
-                if st.session_state.get(f"editando_{animal.get('_id')}"):
-                    st.subheader("Editar Dados do Animal")
-                    with st.form(key=f"form_editar_animal_{animal.get('_id')}"):
+                    if st.session_state.get(f"editando_{animal.get('_id')}"):
+                        st.subheader("Editar Dados do Animal")
+                        with st.form(key=f"form_editar_animal_{animal.get('_id')}"):
 
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            novo_nome_comum = st.text_input("Nome Comum", value=animal.get("nome_comum", ""))
-                            novo_nome_cientifico = st.text_input("Nome Científico", value=animal.get("nome_cientifico", ""))
-                            novo_id_projeto = st.text_input("ID do Projeto", value=animal.get("animal_id_projeto", ""))
-                            novo_hvu = st.text_input("ID do HVU", value=animal.get("hvu", ""))
-                            novo_microchip = st.text_input("Microchip", value=animal.get("microchip", ""))
-                            novo_local_origem = st.text_input("Local de Origem", value=animal.get("local_origem", ""))
-                            nova_idade = st.text_input("Idade", value=animal.get("idade", ""))
-                            nova_suspeita = st.text_input("Suspeita Clínica", value=animal.get("suspeita_clinica", ""))
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                novo_nome_comum = st.text_input("Nome Comum", value=animal.get("nome_comum", ""))
+                                novo_nome_cientifico = st.text_input("Nome Científico", value=animal.get("nome_cientifico", ""))
+                                novo_id_projeto = st.text_input("ID do Projeto", value=animal.get("animal_id_projeto", ""))
+                                novo_hvu = st.text_input("ID do HVU", value=animal.get("hvu", ""))
+                                novo_microchip = st.text_input("Microchip", value=animal.get("microchip", ""))
+                                novo_local_origem = st.text_input("Local de Origem", value=animal.get("local_origem", ""))
+                                nova_idade = st.text_input("Idade", value=animal.get("idade", ""))
+                                nova_suspeita = st.text_input("Suspeita Clínica", value=animal.get("suspeita_clinica", ""))
 
-                        with col2:
-                            sexo_opts = ["", "Macho", "Fêmea", "Desconhecido"]
-                            sexo_atual = animal.get("sexo", "")
-                            novo_sexo = st.selectbox("Sexo", sexo_opts,
-                                index=sexo_opts.index(sexo_atual) if sexo_atual in sexo_opts else 0)
+                            with col2:
+                                sexo_opts = ["", "Macho", "Fêmea", "Desconhecido"]
+                                sexo_atual = animal.get("sexo", "")
+                                novo_sexo = st.selectbox("Sexo", sexo_opts,
+                                    index=sexo_opts.index(sexo_atual) if sexo_atual in sexo_opts else 0)
 
-                            orgao_opts = ['UFPI', 'NEPPAS', 'IBAMA - CETAS - PI', 'IBAMA - CETAS - CE',
-                                          'IBAMA - CETAS - RN', 'SEMARH - CETAS - PI', 'UFPA', 'UFRR',
-                                          'UFAC', 'UFOB', 'DSEI LESTE - AM', 'ZOOLOGICO -PI', 'PARTICULAR', 'Outro']
-                            orgao_atual = animal.get("orgao", "UFPI")
-                            novo_orgao = st.selectbox("Órgão de Origem", orgao_opts,
-                                index=orgao_opts.index(orgao_atual) if orgao_atual in orgao_opts else 0)
+                                orgao_opts = ['UFPI', 'NEPPAS', 'IBAMA - CETAS - PI', 'IBAMA - CETAS - CE',
+                                              'IBAMA - CETAS - RN', 'SEMARH - CETAS - PI', 'UFPA', 'UFRR',
+                                              'UFAC', 'UFOB', 'DSEI LESTE - AM', 'ZOOLOGICO -PI', 'PARTICULAR', 'Outro']
+                                orgao_atual = animal.get("orgao", "UFPI")
+                                novo_orgao = st.selectbox("Órgão de Origem", orgao_opts,
+                                    index=orgao_opts.index(orgao_atual) if orgao_atual in orgao_opts else 0)
 
-                            status_opts = ["", "Vida livre", "Cativeiro"]
-                            status_atual = animal.get("status", "")
-                            novo_status = st.selectbox("Status do Animal", status_opts,
-                                index=status_opts.index(status_atual) if status_atual in status_opts else 0)
+                                status_opts = ["", "Vida livre", "Cativeiro"]
+                                status_atual = animal.get("status", "")
+                                novo_status = st.selectbox("Status do Animal", status_opts,
+                                    index=status_opts.index(status_atual) if status_atual in status_opts else 0)
 
-                            funcao_opts = ["PET", "Trabalho", "Lazer", "Outros"]
-                            funcao_atual = animal.get("funcao", "Outros")
-                            nova_funcao = st.selectbox("Função", funcao_opts,
-                                index=funcao_opts.index(funcao_atual) if funcao_atual in funcao_opts else 3)
+                                funcao_opts = ["PET", "Trabalho", "Lazer", "Outros"]
+                                funcao_atual = animal.get("funcao", "Outros")
+                                nova_funcao = st.selectbox("Função", funcao_opts,
+                                    index=funcao_opts.index(funcao_atual) if funcao_atual in funcao_opts else 3)
 
-                            faixa_opts = ["Filhote", "Suvenil", " Sub Adulto", "Adulto", "Senil", "Não Informado"]
-                            faixa_atual = animal.get("faixa_etaria", "Não Informado")
-                            nova_faixa = st.selectbox("Faixa Etária", faixa_opts,
-                                index=faixa_opts.index(faixa_atual) if faixa_atual in faixa_opts else 5)
+                                faixa_opts = ["Filhote", "Suvenil", " Sub Adulto", "Adulto", "Senil", "Não Informado"]
+                                faixa_atual = animal.get("faixa_etaria", "Não Informado")
+                                nova_faixa = st.selectbox("Faixa Etária", faixa_opts,
+                                    index=faixa_opts.index(faixa_atual) if faixa_atual in faixa_opts else 5)
 
-                            classe_opts = ["Ave", "Mamífero", "Répteis", " Anfíbios", "Peixes"]
-                            classe_atual = animal.get("classe", "")
-                            nova_classe = st.selectbox("Classe", classe_opts,
-                                index=classe_opts.index(classe_atual) if classe_atual in classe_opts else 0)
+                                classe_opts = ["Ave", "Mamífero", "Répteis", " Anfíbios", "Peixes"]
+                                classe_atual = animal.get("classe", "")
+                                nova_classe = st.selectbox("Classe", classe_opts,
+                                    index=classe_opts.index(classe_atual) if classe_atual in classe_opts else 0)
 
-                            novo_peso = st.number_input("Peso (kg)", min_value=0.0, format="%.2f", step=0.01,
-                                value=float(animal.get("peso", 0.0)))
+                                novo_peso = st.number_input("Peso (kg)", min_value=0.0, format="%.2f", step=0.01,
+                                    value=float(animal.get("peso", 0.0)))
 
-                        novas_obs = st.text_area("Observações", value=animal.get("observacoes", ""))
+                            novas_obs = st.text_area("Observações", value=animal.get("observacoes", ""))
 
-                        col_s, col_c = st.columns(2)
-                        with col_s:
-                            salvar = st.form_submit_button("Salvar alterações")
-                        with col_c:
-                            cancelar = st.form_submit_button("Cancelar")
+                            col_s, col_c = st.columns(2)
+                            with col_s:
+                                salvar = st.form_submit_button("Salvar alterações")
+                            with col_c:
+                                cancelar = st.form_submit_button("Cancelar")
 
-                        if salvar:
-                            update_data = {
-                                "nome_comum": novo_nome_comum,
-                                "nome_cientifico": novo_nome_cientifico,
-                                "animal_id_projeto": novo_id_projeto,
-                                "hvu": novo_hvu,
-                                "microchip": novo_microchip,
-                                "local_origem": novo_local_origem,
-                                "idade": nova_idade,
-                                "suspeita_clinica": nova_suspeita,
-                                "sexo": novo_sexo,
-                                "orgao": novo_orgao,
-                                "status": novo_status,
-                                "funcao": nova_funcao,
-                                "faixa_etaria": nova_faixa,
-                                "classe": nova_classe,
-                                "peso": novo_peso,
-                                "observacoes": novas_obs,
-                            }
-                            update_data = {k: v for k, v in update_data.items() if v not in (None, "", [])}
-                            animais_col.update_one({"_id": animal["_id"]}, {"$set": update_data})
-                            st.success("✅ Animal atualizado com sucesso!")
-                            st.session_state[f"editando_{animal.get('_id')}"] = False
-                            st.rerun()
+                            if salvar:
+                                update_data = {
+                                    "nome_comum": novo_nome_comum,
+                                    "nome_cientifico": novo_nome_cientifico,
+                                    "animal_id_projeto": novo_id_projeto,
+                                    "hvu": novo_hvu,
+                                    "microchip": novo_microchip,
+                                    "local_origem": novo_local_origem,
+                                    "idade": nova_idade,
+                                    "suspeita_clinica": nova_suspeita,
+                                    "sexo": novo_sexo,
+                                    "orgao": novo_orgao,
+                                    "status": novo_status,
+                                    "funcao": nova_funcao,
+                                    "faixa_etaria": nova_faixa,
+                                    "classe": nova_classe,
+                                    "peso": novo_peso,
+                                    "observacoes": novas_obs,
+                                }
+                                update_data = {k: v for k, v in update_data.items() if v not in (None, "", [])}
+                                animais_col.update_one({"_id": animal["_id"]}, {"$set": update_data})
+                                st.success("✅ Animal atualizado com sucesso!")
+                                st.session_state[f"editando_{animal.get('_id')}"] = False
+                                st.rerun()
 
-                        if cancelar:
-                            st.session_state[f"editando_{animal.get('_id')}"] = False
-                            st.rerun()
+                            if cancelar:
+                                st.session_state[f"editando_{animal.get('_id')}"] = False
+                                st.rerun()
 
 
                 st.write("---")

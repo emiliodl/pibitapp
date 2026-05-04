@@ -18,6 +18,11 @@ exams_col   = db['exames']
 
 st.title("Editar Amostra")
 
+# Somente Professores podem editar amostras
+if st.session_state.get('matricula') != 'Professor':
+    st.warning("⚠️ Acesso restrito. Você não tem permissão para editar amostras.")
+    st.stop()
+
 # Carrega amostras
 samples = list(samples_col.find())
 # Mapeia ID (string) → documento
