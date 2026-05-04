@@ -237,13 +237,14 @@ with tab1:
                                 amostra, title=f"Detalhes da Amostra {amostra.get('_id')}")
                 else:
                     st.info("Nenhuma amostra para este animal ainda.")
-
-                st.markdown("---")
-                st.warning("Esta ação é irreversível.")
-                if st.button("Confirmar exclusão", key=f"del_animal_{animal.get('_id')}"):
-                    animais_col.delete_one({"_id": animal['_id']})
-                    st.success("Animal excluído! Recarregue a página.")
-                    st.rerun()
+                
+                if st.session_state.get('matricula') == 'Professor':
+                    st.markdown("---")
+                    st.warning("Esta ação é irreversível.")
+                    if st.button("Confirmar exclusão", key=f"del_animal_{animal.get('_id')}"):
+                        animais_col.delete_one({"_id": animal['_id']})
+                        st.success("Animal excluído! Recarregue a página.")
+                        st.rerun()  
 
         st.number_input(
             "Página", min_value=1, max_value=max(1, (total - 1) // por_pagina + 1),
